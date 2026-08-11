@@ -370,7 +370,7 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
    VERSION — bump this on any release; it's the single source of
    truth for the badge shown in the top bar and the About dialog.
    ============================================================ */
-const APP_VERSION = "1.0.1b";
+const APP_VERSION = "1.0.0";
 /* ============================================================
    DATA
    ============================================================ */
@@ -1815,6 +1815,14 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36",
   ];
 
+  function companyName(loc){
+    const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
+    const pattern = ri(0,2);
+    if (pattern === 0) return `${rc(loc.last)} ${rc(COMPANY_SUFFIXES)}`;
+    if (pattern === 1) return `${cap(rc(WORD_BANK))} ${rc(COMPANY_SUFFIXES)}`;
+    return `${rc(loc.last)} & ${cap(rc(WORD_BANK))}`;
+  }
+
   function buildProfile(loc, selected, ageMin, ageMax, gender, units){
     const p = {};
     const first = gender === "male" ? rc(loc.firstMale) : rc(loc.firstFemale);
@@ -1829,7 +1837,7 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
       p["Age"] = String(age);
     }
     if (selected.has("occupation")) p["Occupation"] = rc(JOBS);
-    if (selected.has("employer")) p["Employer"] = `${rc(loc.last)}, ${rc(loc.last)} and ${rc(loc.last)}`;
+    if (selected.has("employer")) p["Employer"] = companyName(loc);
     if (selected.has("ssn")) p["SSN (synthetic)"] = loc.ssnFmt();
     if (selected.has("email")) p["Email"] = `${first.toLowerCase()}.${last.toLowerCase()}${ri(0,998)}@${rc(DOMAINS)}`;
     if (selected.has("phone")) p["Phone"] = loc.phone();
