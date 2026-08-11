@@ -336,6 +336,7 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
         <input type="text" id="globalSeed" placeholder="blank = fully random" style="width:150px;">
       </div>
       <div class="spacer"></div>
+      <span id="versionBadge" class="kbd" style="cursor:default;" title="Random Studio version"></span>
       <button class="ghost" id="aboutBtn">About</button>
     </div>
     <div class="content" id="content"></div>
@@ -364,6 +365,12 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
 
 <script>
 'use strict';
+
+/* ============================================================
+   VERSION — bump this on any release; it's the single source of
+   truth for the badge shown in the top bar and the About dialog.
+   ============================================================ */
+const APP_VERSION = "1.0.1";
 /* ============================================================
    DATA
    ============================================================ */
@@ -2084,6 +2091,7 @@ function initApp(){
   renderHistory();
   applyTheme();
   selectPage(NAV[0].key);
+  document.getElementById("versionBadge").textContent = "v" + APP_VERSION;
 
   document.getElementById("themeToggle").addEventListener("click", () => { isDark = !isDark; applyTheme(); });
 
@@ -2115,7 +2123,7 @@ function initApp(){
   document.getElementById("aboutBtn").addEventListener("click", () => {
     const overlay = el("div", {id:"about-overlay", style:"position:fixed; inset:0; background:rgba(5,6,10,.55); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:700;"});
     const box = el("div", {class:"card", style:"max-width:440px; padding:24px; margin:16px;"}, [
-      el("h2", {style:"font-family:var(--font-display); margin:0 0 10px;"}, "Random Studio"),
+      el("h2", {style:"font-family:var(--font-display); margin:0 0 10px;"}, `Random Studio  ·  v${APP_VERSION}`),
       el("div", {class:"hint", style:"line-height:1.7; font-size:12.5px;"},
         "A fast, modern, all-in-one random data & developer QoL toolkit — built to run entirely in your browser, no server, no accounts, no data leaving your device.\n\n" +
         "Numbers · Strings · Passwords · UUIDs · Colors · Names · Dates · Lorem Ipsum · List Tools · Network · Words · Dev Tools · Bulk Renamer · Fake Profiles · Text Scrambler · Progression Scaler"),
