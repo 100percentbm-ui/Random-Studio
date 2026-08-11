@@ -380,30 +380,48 @@ const STREET_NAMES = ["Maple","Oak","Cedar","Willow","Sunset","Highland","Elm","
 const STREET_TYPES = ["St","Ave","Rd","Ln","Dr","Ct","Blvd","Way","Pl"];
 const US_CITIES = [["Springfield","IL"],["Riverside","CA"],["Franklin","TN"],["Georgetown","TX"],["Salem","OR"],["Madison","WI"],["Arlington","VA"],["Bristol","CT"],["Manchester","NH"],["Fairview","CO"],["Clinton","IA"],["Greenville","SC"],["Ashland","OH"],["Kingston","NY"],["Chester","PA"]];
 const LOCALE_DATA = {
-  en_US: {label:"English (US)", first: FIRST_NAMES, last: LAST_NAMES, cities: US_CITIES, country:"USA",
+  en_US: {label:"English (US)",
+    firstMale:["Liam","Noah","Oliver","Elijah","Mateo","Lucas","Ethan","James","Benjamin","Henry","Alexander","Jackson","Sebastian","Aiden","Daniel","Leo","Owen","Wyatt","John","Kai","Ravi","Hiro","Omar","Yusuf","Diego"],
+    firstFemale:["Ava","Emma","Sophia","Isabella","Mia","Amelia","Harper","Evelyn","Luna","Camila","Gianna","Aria","Scarlett","Layla","Nora","Zoey","Riley","Chloe","Priya","Freya","Elena","Nadia","Ines","Talia","Sana"],
+    last: LAST_NAMES, cities: US_CITIES, country:"USA", currency:{symbol:"$",code:"USD",decimals:2},
     phone: () => `(${ri(200,999)}) ${ri(200,999)}-${String(ri(0,9999)).padStart(4,"0")}`,
     ssnFmt: () => `${String(ri(100,899)).padStart(3,"0")}-${String(ri(1,99)).padStart(2,"0")}-${String(ri(1,9999)).padStart(4,"0")}`},
-  en_GB: {label:"English (UK)", first:["Oliver","Amelia","George","Isla","Harry","Ava","Jack","Freya","Charlie","Grace","Jacob","Poppy","Thomas","Ivy","Oscar","Willow","Freddie","Florence","Archie","Rosie"],
+  en_GB: {label:"English (UK)",
+    firstMale:["Oliver","George","Harry","Jack","Charlie","Jacob","Thomas","Oscar","Freddie","Archie"],
+    firstFemale:["Amelia","Isla","Ava","Freya","Grace","Poppy","Ivy","Willow","Florence","Rosie"],
     last:["Smith","Jones","Taylor","Brown","Williams","Wilson","Johnson","Davies","Robinson","Wright","Thompson","Evans","Walker","White","Roberts","Green","Hall","Wood","Clarke","Baker"],
-    cities:[["Manchester",""],["Bristol",""],["Leeds",""],["Sheffield",""],["York",""],["Oxford",""],["Cambridge",""],["Bath",""]], country:"United Kingdom",
+    cities:[["Manchester",""],["Bristol",""],["Leeds",""],["Sheffield",""],["York",""],["Oxford",""],["Cambridge",""],["Bath",""]], country:"United Kingdom", currency:{symbol:"£",code:"GBP",decimals:2},
     phone: () => `07${ri(100,999)} ${ri(100000,999999)}`,
     ssnFmt: () => `${rc(["AB","CD","EF","JG","NP"])} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${rc(["A","B","C","D"])}`},
-  de_DE: {label:"German", first:["Lukas","Anna","Leon","Mia","Finn","Emma","Paul","Lena","Felix","Marie","Jonas","Laura","Elias","Sophie","Noah","Hannah","Ben","Lea","Luis","Sarah"],
+  de_DE: {label:"German",
+    firstMale:["Lukas","Leon","Finn","Paul","Felix","Jonas","Elias","Noah","Ben","Luis"],
+    firstFemale:["Anna","Mia","Emma","Lena","Marie","Laura","Sophie","Hannah","Lea","Sarah"],
     last:["Müller","Schmidt","Schneider","Fischer","Weber","Meyer","Wagner","Becker","Schulz","Hoffmann","Koch","Richter","Klein","Wolf","Neumann","Schwarz","Zimmermann","Braun","Krüger","Hofmann"],
-    cities:[["München",""],["Hamburg",""],["Köln",""],["Frankfurt",""],["Stuttgart",""],["Leipzig",""],["Dresden",""],["Bonn",""]], country:"Germany",
+    cities:[["München",""],["Hamburg",""],["Köln",""],["Frankfurt",""],["Stuttgart",""],["Leipzig",""],["Dresden",""],["Bonn",""]], country:"Germany", currency:{symbol:"€",code:"EUR",decimals:2},
     phone: () => `+49 ${ri(150,179)} ${ri(1000000,9999999)}`,
     ssnFmt: () => `${ri(10,99)} ${ri(100000,999999)} ${rc(["A","B","C"])} ${ri(100,999)}`},
-  fr_FR: {label:"French", first:["Lucas","Emma","Louis","Chloé","Hugo","Léa","Gabriel","Manon","Jules","Camille","Adam","Inès","Raphaël","Sarah","Arthur","Julia","Léon","Zoé","Nathan","Alice"],
+  fr_FR: {label:"French",
+    firstMale:["Lucas","Louis","Hugo","Gabriel","Jules","Adam","Raphaël","Arthur","Léon","Nathan"],
+    firstFemale:["Emma","Chloé","Léa","Manon","Camille","Inès","Sarah","Julia","Zoé","Alice"],
     last:["Martin","Bernard","Dubois","Thomas","Robert","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Roux","Vincent","Fournier","Morel","Girard"],
-    cities:[["Lyon",""],["Marseille",""],["Toulouse",""],["Nantes",""],["Nice",""],["Strasbourg",""],["Bordeaux",""],["Lille",""]], country:"France",
+    cities:[["Lyon",""],["Marseille",""],["Toulouse",""],["Nantes",""],["Nice",""],["Strasbourg",""],["Bordeaux",""],["Lille",""]], country:"France", currency:{symbol:"€",code:"EUR",decimals:2},
     phone: () => `0${ri(6,7)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)}`,
     ssnFmt: () => `${ri(1,2)} ${ri(10,99)} ${ri(10,99)} ${ri(100,999)} ${ri(100,999)} ${ri(10,99)}`},
-  ja_JP: {label:"Japanese", first:["Haruto","Yui","Sota","Yuna","Ren","Aoi","Riku","Hina","Yuto","Mio","Kaito","Rin","Sora","Sakura","Itsuki","Koharu","Asahi","Ichika","Minato","Tsumugi"],
+  ja_JP: {label:"Japanese",
+    firstMale:["Haruto","Sota","Ren","Riku","Yuto","Kaito","Sora","Itsuki","Asahi","Minato"],
+    firstFemale:["Yui","Yuna","Aoi","Hina","Mio","Rin","Sakura","Koharu","Ichika","Tsumugi"],
     last:["Sato","Suzuki","Takahashi","Tanaka","Watanabe","Ito","Yamamoto","Nakamura","Kobayashi","Kato","Yoshida","Yamada","Sasaki","Yamaguchi","Matsumoto","Inoue","Kimura","Hayashi","Shimizu","Saito"],
-    cities:[["Shibuya",""],["Shinjuku",""],["Yokohama",""],["Osaka",""],["Nagoya",""],["Fukuoka",""],["Sapporo",""],["Kobe",""]], country:"Japan",
+    cities:[["Shibuya",""],["Shinjuku",""],["Yokohama",""],["Osaka",""],["Nagoya",""],["Fukuoka",""],["Sapporo",""],["Kobe",""]], country:"Japan", currency:{symbol:"¥",code:"JPY",decimals:0},
     phone: () => `090-${ri(1000,9999)}-${ri(1000,9999)}`,
     ssnFmt: () => `${ri(1000,9999)}-${ri(1000,9999)}-${ri(1000,9999)}`},
 };
+function formatMoney(amount, currency){
+  const dec = currency.decimals;
+  const n = dec === 0 ? Math.round(amount) : +amount.toFixed(dec);
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  return sign + currency.symbol + abs.toLocaleString(undefined, {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
 
 /* ============================================================
    UTILITIES
@@ -1702,6 +1720,13 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   card.appendChild(fieldRow("Locale", localeSel));
   const count = makeNumber(1,2000,10,1); card.appendChild(fieldRow("How many", count));
 
+  const genderSel = makeSelect(["Any (mixed)","Male only","Female only"]);
+  card.appendChild(fieldRow("Gender", genderSel));
+
+  const unitsSel = makeSelect(["Metric (cm / kg)","Imperial (ft-in / lbs)"]);
+  card.appendChild(fieldRow("Units", unitsSel));
+  card.appendChild(el("div", {class:"hint"}, "Only affects the “Height & Weight” field."));
+
   const minAge = makeNumber(0,120,18,1), maxAge = makeNumber(0,120,85,1);
   minAge.style.flex = "1 1 0"; minAge.style.minWidth = "0";
   maxAge.style.flex = "1 1 0"; maxAge.style.minWidth = "0";
@@ -1724,12 +1749,17 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   card.appendChild(selRow);
 
   const FIELD_DEFS = [
-    ["name","Full Name","Personal",true], ["age_dob","Age / Date of Birth","Personal",true],
+    ["name","Full Name","Personal",true], ["gender","Gender","Personal",false], ["age_dob","Age / Date of Birth","Personal",true],
     ["occupation","Occupation","Personal",true], ["employer","Employer / Company","Personal",false],
     ["ssn","SSN","Personal",false],
     ["email","Email","Contact",true], ["phone","Phone Number","Contact",true], ["address","Address","Contact",true],
     ["card","Credit / Debit Card","Financial (synthetic)",false], ["bank","Bank Account / IBAN","Financial (synthetic)",false],
-    ["credit_score","Credit Score","Financial (synthetic)",false],
+    ["credit_score","Credit Score","Financial (synthetic)",false], ["balance","Bank Balance","Financial (synthetic)",false],
+    ["income","Annual Income","Financial (synthetic)",false], ["net_worth","Net Worth","Financial (synthetic)",false],
+    ["account_type","Account Type","Financial (synthetic)",false],
+    ["member_since","Member Since","Account Activity",false], ["subscription","Subscription Plan","Account Activity",false],
+    ["account_status","Account Status","Account Activity",false], ["last_login","Last Login","Account Activity",false],
+    ["loyalty_points","Loyalty Points","Account Activity",false], ["transaction_count","Transactions (30 days)","Account Activity",false],
     ["username","Username","Online",false], ["password","Sample Password","Online",false],
     ["website","Website","Online",false], ["ip","IP Address","Online",false], ["user_agent","User Agent","Online",false],
     ["height_weight","Height & Weight","Other",false], ["blood_type","Blood Type","Other",false], ["vehicle","Vehicle","Other",false],
@@ -1778,10 +1808,12 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36",
   ];
 
-  function buildProfile(loc, selected, ageMin, ageMax){
+  function buildProfile(loc, selected, ageMin, ageMax, gender, units){
     const p = {};
-    const first = rc(loc.first), last = rc(loc.last);
+    const first = gender === "male" ? rc(loc.firstMale) : rc(loc.firstFemale);
+    const last = rc(loc.last);
     if (selected.has("name")) p["Name"] = `${first} ${last}`;
+    if (selected.has("gender")) p["Gender"] = gender === "male" ? "Male" : "Female";
     if (selected.has("age_dob")){
       const age = ri(ageMin, ageMax);
       const now = new Date();
@@ -1813,12 +1845,39 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
       p["Bank (synthetic)"] = `Acct ${acct} • Routing ${routing} • IBAN ${synthIban()} • SWIFT ${synthSwift()}`;
     }
     if (selected.has("credit_score")) p["Credit Score (synthetic)"] = String(ri(300,850));
+    if (selected.has("balance")) p["Bank Balance"] = formatMoney(rf(12.50, 85000, 2), loc.currency);
+    if (selected.has("income")) p["Annual Income"] = formatMoney(rf(20000, 250000, 2), loc.currency);
+    if (selected.has("net_worth")) p["Net Worth"] = formatMoney(rf(-50000, 750000, 2), loc.currency);
+    if (selected.has("account_type")) p["Account Type"] = rc(["Checking","Savings","Checking & Savings"]);
+    if (selected.has("member_since")){
+      const daysAgo = ri(30, 8*365);
+      const d = new Date(Date.now() - daysAgo*86400000);
+      p["Member Since"] = d.toISOString().slice(0,10);
+    }
+    if (selected.has("subscription")) p["Subscription Plan"] = rc(["Free","Basic","Pro","Enterprise"]);
+    if (selected.has("account_status")) p["Account Status"] = rc(["Active","Active","Active","Inactive","Suspended","Pending Verification"]);
+    if (selected.has("last_login")){
+      const minsAgo = ri(2, 30*24*60);
+      const d = new Date(Date.now() - minsAgo*60000);
+      p["Last Login"] = d.toISOString().slice(0,16).replace("T"," ");
+    }
+    if (selected.has("loyalty_points")) p["Loyalty Points"] = ri(0,50000).toLocaleString();
+    if (selected.has("transaction_count")) p["Transactions (30 days)"] = String(ri(0,120));
     if (selected.has("username")) p["Username"] = `${first.toLowerCase()}${last.toLowerCase()}${ri(0,98)}`;
     if (selected.has("password")) p["Sample Password"] = Array.from({length:14}, () => rc([..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"])).join("");
     if (selected.has("website")) p["Website"] = `http://www.${last.toLowerCase()}${rc(WORD_BANK)}.${rc(TLDS)}/`;
     if (selected.has("ip")) p["IP Address"] = Array.from({length:4}, () => ri(1,254)).join(".");
     if (selected.has("user_agent")) p["User Agent"] = rc(UAS);
-    if (selected.has("height_weight")) p["Height / Weight"] = `${ri(150,200)} cm / ${ri(45,110)} kg`;
+    if (selected.has("height_weight")){
+      if (units.startsWith("Imperial")){
+        const totalIn = ri(59,79);
+        const ft = Math.floor(totalIn/12), inch = totalIn%12;
+        const lbs = ri(100,240);
+        p["Height / Weight"] = `${ft}'${inch}" / ${lbs} lbs`;
+      } else {
+        p["Height / Weight"] = `${ri(150,200)} cm / ${ri(45,110)} kg`;
+      }
+    }
     if (selected.has("blood_type")) p["Blood Type"] = rc(["A+","A-","B+","B-","AB+","AB-","O+","O-"]);
     if (selected.has("vehicle")) p["Vehicle"] = `${rc(VEHICLE_MAKES)} • Plate ${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}-${ri(1000,9999)}`;
     return p;
@@ -1840,9 +1899,14 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     let ageMin = +minAge.value, ageMax = +maxAge.value;
     if (ageMin > ageMax) [ageMin, ageMax] = [ageMax, ageMin];
     const loc = LOCALE_DATA[localeSel.value];
+    const units = unitsSel.value;
+    const genderMode = genderSel.value;
     RNG.seed(seedInput.value.trim());
     const n = +count.value;
-    profiles = Array.from({length:n}, () => buildProfile(loc, selected, ageMin, ageMax));
+    profiles = Array.from({length:n}, () => {
+      const gender = genderMode === "Male only" ? "male" : genderMode === "Female only" ? "female" : rc(["male","female"]);
+      return buildProfile(loc, selected, ageMin, ageMax, gender, units);
+    });
     RNG.seed(""); // don't let the seed leak into other pages
     render();
     logHistory("Fake Profiles", profiles.map((p,i) => p["Name"] || `Profile ${i+1}`));
