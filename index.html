@@ -192,6 +192,32 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
   word-break:break-word; max-height:480px; overflow-y:auto; min-height:120px;
 }
 
+/* ---------- Fake Profiles: per-profile cards ---------- */
+.profiles-output{ display:flex; flex-direction:column; gap:10px; max-height:600px; overflow-y:auto; padding-right:2px; }
+.profile-card{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:12px 14px; font-family:var(--font-mono); font-size:12.5px;
+}
+.profile-card-head{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;
+  font-family:var(--font-body); font-weight:600; color:var(--text-dim); font-size:11px;
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.profile-copy-btn{
+  font-family:var(--font-body); font-size:10.5px; padding:3px 9px; border-radius:6px;
+  border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer;
+  text-transform:none; letter-spacing:0; font-weight:500;
+}
+.profile-copy-btn:hover{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.profile-field{ display:flex; gap:6px; padding:3px 4px; border-radius:6px; line-height:1.6; }
+.profile-field .f-key{ color:var(--text-dim); flex:none; }
+.profile-field .f-val{ word-break:break-word; }
+.profile-field.clickable{ cursor:pointer; }
+.profile-field.clickable:hover{ background:var(--surface); }
+.profile-field.clickable:hover .f-val{ color:var(--accent); }
+.profile-field.flash{ background:var(--accent-soft); }
+.profile-field.flash .f-val{ color:var(--accent); }
+
 /* ---------- Toggle / theme switch ---------- */
 .theme-toggle{ display:flex; align-items:center; justify-content:space-between; }
 
@@ -370,7 +396,7 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
    VERSION — bump this on any release; it's the single source of
    truth for the badge shown in the top bar and the About dialog.
    ============================================================ */
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "0.2b";
 /* ============================================================
    DATA
    ============================================================ */
@@ -1793,17 +1819,28 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   const head = el("div", {class:"results-head"}, [el("h3", {}, "Preview")]);
   const countLbl = el("span", {class:"stat"}, ""); head.appendChild(countLbl);
   head.appendChild(el("div", {class:"spacer"}));
+  const perFieldF = checkField("Per-field copy", true);
+  perFieldF.wrap.style.marginRight = "4px";
+  head.appendChild(perFieldF.wrap);
   const copyAllBtn = el("button", {class:"ghost"}, "Copy All");
   const fmtSel = makeSelect([["txt","TXT"],["csv","CSV"],["json","JSON"]]); fmtSel.style.width="auto";
   const exportBtn = el("button", {class:"ghost"}, "Export");
   const clearBtn = el("button", {class:"ghost"}, "Clear");
   head.append(copyAllBtn, fmtSel, exportBtn, clearBtn);
   right.appendChild(head);
-  const output = el("div", {class:"output-box"}, "");
+  const output = el("div", {class:"profiles-output"});
+  output.appendChild(el("div", {class:"empty", style:"padding:30px 10px; text-align:center; color:var(--text-dim);"}, "Nothing generated yet — set your options and click Generate Profiles."));
   right.appendChild(output);
   right.appendChild(el("div", {class:"hint"}, "⚠️ All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only."));
 
   let profiles = [];
+
+  function profileText(p, i){
+    const lines = [`── Profile #${i+1} ──`];
+    for (const [k,v] of Object.entries(p)) lines.push(`${k}: ${v}`);
+    return lines.join("\n");
+  }
+  function allText(){ return profiles.map(profileText).join("\n\n"); }
 
   function synthIban(){ return rc(["GB","DE","FR","NL"]) + ri(10,99) + Array.from({length:4},()=>rc([..."ABCDEFGHJKLMNPQRSTUVWXYZ"])).join("") + String(ri(10000000,99999999)) + String(ri(1000,9999)); }
   function synthSwift(){ return Array.from({length:4},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])).join("") + rc(["GB","US","DE","FR","JP"]) + Array.from({length:2},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"])).join(""); }
@@ -1899,14 +1936,37 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   }
 
   function render(){
-    const blocks = profiles.map((p,i) => {
-      const lines = [`── Profile #${i+1} ──`];
-      for (const [k,v] of Object.entries(p)) lines.push(`${k}: ${v}`);
-      return lines.join("\n");
+    output.innerHTML = "";
+    if (!profiles.length){
+      output.appendChild(el("div", {class:"empty", style:"padding:30px 10px; text-align:center; color:var(--text-dim);"}, "Nothing generated yet — set your options and click Generate Profiles."));
+      countLbl.textContent = "";
+      return;
+    }
+    const perField = perFieldF.input.checked;
+    profiles.forEach((p, i) => {
+      const copyBtn = el("button", {class:"profile-copy-btn"}, "Copy profile");
+      copyBtn.addEventListener("click", () => copyText(profileText(p, i)));
+      const cardHead = el("div", {class:"profile-card-head"}, [el("span", {}, `Profile #${i+1}`), copyBtn]);
+      const card = el("div", {class:"profile-card"}, [cardHead]);
+      for (const [k,v] of Object.entries(p)){
+        const valSpan = el("span", {class:"f-val"}, String(v));
+        const line = el("div", {class:"profile-field" + (perField ? " clickable" : "")}, [
+          el("span", {class:"f-key"}, `${k}:`), valSpan,
+        ]);
+        if (perField){
+          line.addEventListener("click", () => {
+            copyText(String(v));
+            line.classList.add("flash");
+            setTimeout(() => line.classList.remove("flash"), 700);
+          });
+        }
+        card.appendChild(line);
+      }
+      output.appendChild(card);
     });
-    output.textContent = blocks.join("\n\n");
-    countLbl.textContent = profiles.length ? `${profiles.length} profile${profiles.length===1?"":"s"}` : "";
+    countLbl.textContent = `${profiles.length} profile${profiles.length===1?"":"s"}`;
   }
+  perFieldF.input.addEventListener("change", render);
 
   card.appendChild(primaryButton("Generate Profiles", () => {
     const selected = new Set(Object.entries(checks).filter(([,c]) => c.checked).map(([k]) => k));
@@ -1927,13 +1987,13 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     logHistory("Fake Profiles", profiles.map((p,i) => p["Name"] || `Profile ${i+1}`));
   }));
 
-  copyAllBtn.addEventListener("click", () => copyText(output.textContent));
+  copyAllBtn.addEventListener("click", () => copyText(allText()));
   clearBtn.addEventListener("click", () => { profiles = []; render(); });
   exportBtn.addEventListener("click", () => {
     if (!profiles.length){ toast("Generate some profiles first."); return; }
     const fmt = fmtSel.value;
     const disclaimer = "All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only.";
-    if (fmt === "txt") downloadBlob("fake_profiles.txt", `# ${disclaimer}\n\n` + output.textContent, "text/plain");
+    if (fmt === "txt") downloadBlob("fake_profiles.txt", `# ${disclaimer}\n\n` + allText(), "text/plain");
     else if (fmt === "json") downloadBlob("fake_profiles.json", JSON.stringify({disclaimer, profiles}, null, 2), "application/json");
     else {
       const fieldnames = []; profiles.forEach(p => Object.keys(p).forEach(k => { if (!fieldnames.includes(k)) fieldnames.push(k); }));
