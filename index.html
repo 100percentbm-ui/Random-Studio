@@ -396,7 +396,7 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
    VERSION — bump this on any release; it's the single source of
    truth for the badge shown in the top bar and the About dialog.
    ============================================================ */
-const APP_VERSION = "0.2b";
+const APP_VERSION = "0.5b";
 /* ============================================================
    DATA
    ============================================================ */
@@ -1266,21 +1266,53 @@ registerPage("names", "👤", "Names & Identities", "Content", (container) => {
    PAGE: Dates & Times
    ============================================================ */
 registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
-  pageHeader(container, "Dates & Times", "Generate random dates or timestamps within a range.");
+  pageHeader(container, "Dates & Times", "Generate random dates, date+time combos, or just times of day.");
   const body = pageBody(container);
   const card = controlsCard(body);
+
+  const modeSel = makeSelect(["Date only","Date + Time","Time only"], 0);
+  card.appendChild(fieldRow("Mode", modeSel));
 
   const today = new Date();
   const twoYrsAgo = new Date(); twoYrsAgo.setFullYear(today.getFullYear()-2);
   const startInput = el("input", {type:"date", value: twoYrsAgo.toISOString().slice(0,10)});
-  card.appendChild(fieldRow("Start", startInput));
+  const startRow = fieldRow("Start", startInput);
+  card.appendChild(startRow);
   const endInput = el("input", {type:"date", value: today.toISOString().slice(0,10)});
-  card.appendChild(fieldRow("End", endInput));
-  const timeF = checkField("Include random time of day"); card.appendChild(timeF.wrap);
-  const fmtSel = makeSelect(["YYYY-MM-DD","MM/DD/YYYY","DD/MM/YYYY","Month D, YYYY","ISO 8601","Unix timestamp"]);
-  card.appendChild(fieldRow("Format", fmtSel));
+  const endRow = fieldRow("End", endInput);
+  card.appendChild(endRow);
+
+  const startTimeInput = el("input", {type:"time", value:"00:00", step:"1"});
+  const startTimeRow = fieldRow("Start time", startTimeInput);
+  card.appendChild(startTimeRow);
+  const endTimeInput = el("input", {type:"time", value:"23:59", step:"1"});
+  const endTimeRow = fieldRow("End time", endTimeInput);
+  card.appendChild(endTimeRow);
+
+  const dateFmtSel = makeSelect(["YYYY-MM-DD","MM/DD/YYYY","DD/MM/YYYY","Month D, YYYY","ISO 8601","Unix timestamp"]);
+  const dateFmtRow = fieldRow("Format", dateFmtSel);
+  card.appendChild(dateFmtRow);
+
+  const timeFmtSel = makeSelect(["HH:MM:SS (24h)","HH:MM (24h)","hh:mm:ss AM/PM (12h)","hh:mm AM/PM (12h)"]);
+  const timeFmtRow = fieldRow("Format", timeFmtSel);
+  card.appendChild(timeFmtRow);
+
   const count = makeNumber(1,10000,10,1); card.appendChild(fieldRow("How many", count));
   const sortF = checkField("Sort chronologically"); card.appendChild(sortF.wrap);
+
+  function syncMode(){
+    const mode = modeSel.value;
+    const isTimeOnly = mode === "Time only";
+    const isDateTime = mode === "Date + Time";
+    startRow.style.display = isTimeOnly ? "none" : "flex";
+    endRow.style.display = isTimeOnly ? "none" : "flex";
+    dateFmtRow.style.display = isTimeOnly ? "none" : "flex";
+    startTimeRow.style.display = isTimeOnly ? "flex" : "none";
+    endTimeRow.style.display = isTimeOnly ? "flex" : "none";
+    timeFmtRow.style.display = isTimeOnly ? "flex" : "none";
+  }
+  modeSel.addEventListener("change", syncMode);
+  syncMode();
 
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   function fmtDate(d, fmt, hasTime){
@@ -1295,13 +1327,39 @@ registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
     if (hasTime) s += ` ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     return s;
   }
+  function fmtTime(h, m, s, fmt){
+    const pad = n => String(n).padStart(2,"0");
+    if (fmt === "HH:MM:SS (24h)") return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    if (fmt === "HH:MM (24h)") return `${pad(h)}:${pad(m)}`;
+    const ampm = h < 12 ? "AM" : "PM";
+    const h12 = ((h % 12) || 12);
+    if (fmt === "hh:mm:ss AM/PM (12h)") return `${pad(h12)}:${pad(m)}:${pad(s)} ${ampm}`;
+    return `${pad(h12)}:${pad(m)} ${ampm}`;
+  }
+  function parseTimeToSeconds(val){
+    const parts = (val || "00:00").split(":").map(Number);
+    return (parts[0]||0)*3600 + (parts[1]||0)*60 + (parts[2]||0);
+  }
 
   const results = resultsColumn(body, {filenameBase:"dates"});
   card.appendChild(primaryButton("Generate", () => {
+    const mode = modeSel.value;
+    const n = +count.value;
+
+    if (mode === "Time only"){
+      let s0 = parseTimeToSeconds(startTimeInput.value), s1 = parseTimeToSeconds(endTimeInput.value);
+      if (s0 > s1) [s0,s1] = [s1,s0];
+      let secs = Array.from({length:n}, () => ri(s0, s1));
+      if (sortF.input.checked) secs.sort((a,b)=>a-b);
+      const items = secs.map(sec => fmtTime(Math.floor(sec/3600), Math.floor((sec%3600)/60), sec%60, timeFmtSel.value));
+      results.setItems(items, "Dates & Times");
+      return;
+    }
+
     let d0 = new Date(startInput.value), d1 = new Date(endInput.value);
     if (d0 > d1) [d0,d1] = [d1,d0];
     const spanMs = d1.getTime() - d0.getTime();
-    const n = +count.value, hasTime = timeF.input.checked;
+    const hasTime = mode === "Date + Time";
     let dates = [];
     for (let i=0;i<n;i++){
       const offsetDays = ri(0, Math.round(spanMs/86400000));
@@ -1310,7 +1368,7 @@ registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
       dates.push(d);
     }
     if (sortF.input.checked) dates.sort((a,b)=>a-b);
-    results.setItems(dates.map(d => fmtDate(d, fmtSel.value, hasTime)), "Dates & Times");
+    results.setItems(dates.map(d => fmtDate(d, dateFmtSel.value, hasTime)), "Dates & Times");
   }));
 });
 
