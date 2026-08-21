@@ -107,7 +107,7 @@ a{ color:var(--accent-2); }
 }
 .topbar .spacer{ flex:1; }
 .seed-field{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-dim); }
-.hamburger{ display:none; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:7px 11px; font-size:15px; line-height:1; cursor:pointer; flex:none; }
+.hamburger{ display:none; }
 
 .content{ flex:1; overflow-y:auto; padding:26px 30px 40px; }
 .page{ display:none; max-width:1200px; margin:0 auto; }
@@ -130,7 +130,6 @@ a{ color:var(--accent-2); }
 .field-row label{ min-width:96px; font-size:12.5px; color:var(--text-dim); flex:none; }
 .field-row.wide label{ min-width:0; }
 .field-row > *:last-child:not(label){ flex:1; }
-.field-row input, .field-row select{ min-width:0; }
 
 .field-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; }
 .field-check input{ width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
@@ -191,32 +190,6 @@ button:disabled{ opacity:.45; cursor:not-allowed; }
   padding:12px 14px; font-family:var(--font-mono); font-size:12.5px; white-space:pre-wrap;
   word-break:break-word; max-height:480px; overflow-y:auto; min-height:120px;
 }
-
-/* ---------- Fake Profiles: per-profile cards ---------- */
-.profiles-output{ display:flex; flex-direction:column; gap:10px; max-height:600px; overflow-y:auto; padding-right:2px; }
-.profile-card{
-  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
-  padding:12px 14px; font-family:var(--font-mono); font-size:12.5px;
-}
-.profile-card-head{
-  display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;
-  font-family:var(--font-body); font-weight:600; color:var(--text-dim); font-size:11px;
-  text-transform:uppercase; letter-spacing:.04em;
-}
-.profile-copy-btn{
-  font-family:var(--font-body); font-size:10.5px; padding:3px 9px; border-radius:6px;
-  border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer;
-  text-transform:none; letter-spacing:0; font-weight:500;
-}
-.profile-copy-btn:hover{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
-.profile-field{ display:flex; gap:6px; padding:3px 4px; border-radius:6px; line-height:1.6; }
-.profile-field .f-key{ color:var(--text-dim); flex:none; }
-.profile-field .f-val{ word-break:break-word; }
-.profile-field.clickable{ cursor:pointer; }
-.profile-field.clickable:hover{ background:var(--surface); }
-.profile-field.clickable:hover .f-val{ color:var(--accent); }
-.profile-field.flash{ background:var(--accent-soft); }
-.profile-field.flash .f-val{ color:var(--accent); }
 
 /* ---------- Toggle / theme switch ---------- */
 .theme-toggle{ display:flex; align-items:center; justify-content:space-between; }
@@ -312,14 +285,6 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
   .controls-card{ width:100%; flex:1 1 100%; }
   .page-body{ flex-direction:column; }
   .content{ padding:18px 16px 32px; }
-  .topbar{ padding:10px 12px; gap:8px; }
-  .seed-field{ flex:1; min-width:0; }
-  .seed-field span{ display:none; }
-  .seed-field input{ width:100% !important; min-width:0; }
-}
-@media (max-width:480px){
-  .topbar #aboutBtn{ display:none; }
-  .swatch-grid{ grid-template-columns:repeat(2,1fr); }
 }
 @media (prefers-reduced-motion:reduce){
   *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
@@ -328,7 +293,7 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
 </head>
 <body>
 <div id="app">
-
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" style="position:fixed; top:12px; left:12px; z-index:310; padding:8px 10px;">☰</button>
 
   <nav class="sidebar" id="sidebar">
     <div class="brand">
@@ -356,13 +321,11 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
 
   <div class="main">
     <div class="topbar">
-      <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">☰</button>
       <div class="seed-field">
         <span>Seed</span>
         <input type="text" id="globalSeed" placeholder="blank = fully random" style="width:150px;">
       </div>
       <div class="spacer"></div>
-      <span id="versionBadge" class="kbd" style="cursor:default;" title="Random Studio version"></span>
       <button class="ghost" id="aboutBtn">About</button>
     </div>
     <div class="content" id="content"></div>
@@ -391,12 +354,6 @@ canvas.curve-canvas{ width:100%; height:150px; display:block; }
 
 <script>
 'use strict';
-
-/* ============================================================
-   VERSION — bump this on any release; it's the single source of
-   truth for the badge shown in the top bar and the About dialog.
-   ============================================================ */
-const APP_VERSION = "0.5b";
 /* ============================================================
    DATA
    ============================================================ */
@@ -413,48 +370,30 @@ const STREET_NAMES = ["Maple","Oak","Cedar","Willow","Sunset","Highland","Elm","
 const STREET_TYPES = ["St","Ave","Rd","Ln","Dr","Ct","Blvd","Way","Pl"];
 const US_CITIES = [["Springfield","IL"],["Riverside","CA"],["Franklin","TN"],["Georgetown","TX"],["Salem","OR"],["Madison","WI"],["Arlington","VA"],["Bristol","CT"],["Manchester","NH"],["Fairview","CO"],["Clinton","IA"],["Greenville","SC"],["Ashland","OH"],["Kingston","NY"],["Chester","PA"]];
 const LOCALE_DATA = {
-  en_US: {label:"English (US)",
-    firstMale:["Liam","Noah","Oliver","Elijah","Mateo","Lucas","Ethan","James","Benjamin","Henry","Alexander","Jackson","Sebastian","Aiden","Daniel","Leo","Owen","Wyatt","John","Kai","Ravi","Hiro","Omar","Yusuf","Diego"],
-    firstFemale:["Ava","Emma","Sophia","Isabella","Mia","Amelia","Harper","Evelyn","Luna","Camila","Gianna","Aria","Scarlett","Layla","Nora","Zoey","Riley","Chloe","Priya","Freya","Elena","Nadia","Ines","Talia","Sana"],
-    last: LAST_NAMES, cities: US_CITIES, country:"USA", currency:{symbol:"$",code:"USD",decimals:2},
+  en_US: {label:"English (US)", first: FIRST_NAMES, last: LAST_NAMES, cities: US_CITIES, country:"USA",
     phone: () => `(${ri(200,999)}) ${ri(200,999)}-${String(ri(0,9999)).padStart(4,"0")}`,
     ssnFmt: () => `${String(ri(100,899)).padStart(3,"0")}-${String(ri(1,99)).padStart(2,"0")}-${String(ri(1,9999)).padStart(4,"0")}`},
-  en_GB: {label:"English (UK)",
-    firstMale:["Oliver","George","Harry","Jack","Charlie","Jacob","Thomas","Oscar","Freddie","Archie"],
-    firstFemale:["Amelia","Isla","Ava","Freya","Grace","Poppy","Ivy","Willow","Florence","Rosie"],
+  en_GB: {label:"English (UK)", first:["Oliver","Amelia","George","Isla","Harry","Ava","Jack","Freya","Charlie","Grace","Jacob","Poppy","Thomas","Ivy","Oscar","Willow","Freddie","Florence","Archie","Rosie"],
     last:["Smith","Jones","Taylor","Brown","Williams","Wilson","Johnson","Davies","Robinson","Wright","Thompson","Evans","Walker","White","Roberts","Green","Hall","Wood","Clarke","Baker"],
-    cities:[["Manchester",""],["Bristol",""],["Leeds",""],["Sheffield",""],["York",""],["Oxford",""],["Cambridge",""],["Bath",""]], country:"United Kingdom", currency:{symbol:"£",code:"GBP",decimals:2},
+    cities:[["Manchester",""],["Bristol",""],["Leeds",""],["Sheffield",""],["York",""],["Oxford",""],["Cambridge",""],["Bath",""]], country:"United Kingdom",
     phone: () => `07${ri(100,999)} ${ri(100000,999999)}`,
     ssnFmt: () => `${rc(["AB","CD","EF","JG","NP"])} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${rc(["A","B","C","D"])}`},
-  de_DE: {label:"German",
-    firstMale:["Lukas","Leon","Finn","Paul","Felix","Jonas","Elias","Noah","Ben","Luis"],
-    firstFemale:["Anna","Mia","Emma","Lena","Marie","Laura","Sophie","Hannah","Lea","Sarah"],
+  de_DE: {label:"German", first:["Lukas","Anna","Leon","Mia","Finn","Emma","Paul","Lena","Felix","Marie","Jonas","Laura","Elias","Sophie","Noah","Hannah","Ben","Lea","Luis","Sarah"],
     last:["Müller","Schmidt","Schneider","Fischer","Weber","Meyer","Wagner","Becker","Schulz","Hoffmann","Koch","Richter","Klein","Wolf","Neumann","Schwarz","Zimmermann","Braun","Krüger","Hofmann"],
-    cities:[["München",""],["Hamburg",""],["Köln",""],["Frankfurt",""],["Stuttgart",""],["Leipzig",""],["Dresden",""],["Bonn",""]], country:"Germany", currency:{symbol:"€",code:"EUR",decimals:2},
+    cities:[["München",""],["Hamburg",""],["Köln",""],["Frankfurt",""],["Stuttgart",""],["Leipzig",""],["Dresden",""],["Bonn",""]], country:"Germany",
     phone: () => `+49 ${ri(150,179)} ${ri(1000000,9999999)}`,
     ssnFmt: () => `${ri(10,99)} ${ri(100000,999999)} ${rc(["A","B","C"])} ${ri(100,999)}`},
-  fr_FR: {label:"French",
-    firstMale:["Lucas","Louis","Hugo","Gabriel","Jules","Adam","Raphaël","Arthur","Léon","Nathan"],
-    firstFemale:["Emma","Chloé","Léa","Manon","Camille","Inès","Sarah","Julia","Zoé","Alice"],
+  fr_FR: {label:"French", first:["Lucas","Emma","Louis","Chloé","Hugo","Léa","Gabriel","Manon","Jules","Camille","Adam","Inès","Raphaël","Sarah","Arthur","Julia","Léon","Zoé","Nathan","Alice"],
     last:["Martin","Bernard","Dubois","Thomas","Robert","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Roux","Vincent","Fournier","Morel","Girard"],
-    cities:[["Lyon",""],["Marseille",""],["Toulouse",""],["Nantes",""],["Nice",""],["Strasbourg",""],["Bordeaux",""],["Lille",""]], country:"France", currency:{symbol:"€",code:"EUR",decimals:2},
+    cities:[["Lyon",""],["Marseille",""],["Toulouse",""],["Nantes",""],["Nice",""],["Strasbourg",""],["Bordeaux",""],["Lille",""]], country:"France",
     phone: () => `0${ri(6,7)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)} ${ri(10,99)}`,
     ssnFmt: () => `${ri(1,2)} ${ri(10,99)} ${ri(10,99)} ${ri(100,999)} ${ri(100,999)} ${ri(10,99)}`},
-  ja_JP: {label:"Japanese",
-    firstMale:["Haruto","Sota","Ren","Riku","Yuto","Kaito","Sora","Itsuki","Asahi","Minato"],
-    firstFemale:["Yui","Yuna","Aoi","Hina","Mio","Rin","Sakura","Koharu","Ichika","Tsumugi"],
+  ja_JP: {label:"Japanese", first:["Haruto","Yui","Sota","Yuna","Ren","Aoi","Riku","Hina","Yuto","Mio","Kaito","Rin","Sora","Sakura","Itsuki","Koharu","Asahi","Ichika","Minato","Tsumugi"],
     last:["Sato","Suzuki","Takahashi","Tanaka","Watanabe","Ito","Yamamoto","Nakamura","Kobayashi","Kato","Yoshida","Yamada","Sasaki","Yamaguchi","Matsumoto","Inoue","Kimura","Hayashi","Shimizu","Saito"],
-    cities:[["Shibuya",""],["Shinjuku",""],["Yokohama",""],["Osaka",""],["Nagoya",""],["Fukuoka",""],["Sapporo",""],["Kobe",""]], country:"Japan", currency:{symbol:"¥",code:"JPY",decimals:0},
+    cities:[["Shibuya",""],["Shinjuku",""],["Yokohama",""],["Osaka",""],["Nagoya",""],["Fukuoka",""],["Sapporo",""],["Kobe",""]], country:"Japan",
     phone: () => `090-${ri(1000,9999)}-${ri(1000,9999)}`,
     ssnFmt: () => `${ri(1000,9999)}-${ri(1000,9999)}-${ri(1000,9999)}`},
 };
-function formatMoney(amount, currency){
-  const dec = currency.decimals;
-  const n = dec === 0 ? Math.round(amount) : +amount.toFixed(dec);
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
-  return sign + currency.symbol + abs.toLocaleString(undefined, {minimumFractionDigits:dec, maximumFractionDigits:dec});
-}
 
 /* ============================================================
    UTILITIES
@@ -482,6 +421,44 @@ function rc(arr){ // random choice
   return arr[RNG.seeded ? Math.floor(RNG.next() * arr.length) : ri(0, arr.length - 1)];
 }
 function rint(min, max){ return RNG.seeded ? riFast(min, max) : ri(min, max); }
+
+/* ---- BigInt-based random integers (needed for ranges beyond 2^53, e.g. up to a quintillion) ---- */
+function randomBigUintSecure(bits){
+  if (bits <= 0) return 0n;
+  const bytes = Math.ceil(bits / 8);
+  const buf = new Uint8Array(bytes);
+  crypto.getRandomValues(buf);
+  let val = 0n;
+  for (const byte of buf) val = (val << 8n) | BigInt(byte);
+  const extra = BigInt(bytes * 8 - bits);
+  if (extra) val >>= extra;
+  return val;
+}
+function randomBigUintSeeded(bits){
+  let val = 0n, remaining = bits;
+  while (remaining > 0){
+    const take = Math.min(32, remaining);
+    const chunk = Math.floor(RNG.next() * 0x100000000) >>> 0;
+    val = (val << BigInt(take)) | BigInt(chunk >>> (32 - take));
+    remaining -= take;
+  }
+  return val;
+}
+function riBig(minBig, maxBig, secure = true){ // uniform random BigInt in [minBig, maxBig]
+  const range = maxBig - minBig + 1n;
+  if (range <= 0n) return minBig;
+  const bits = range.toString(2).length;
+  let x;
+  do { x = secure ? randomBigUintSecure(bits) : randomBigUintSeeded(bits); } while (x >= range);
+  return minBig + x;
+}
+function toIntString(s){ // safely truncate a numeric string to an integer string, no float precision loss
+  s = String(s ?? "").trim();
+  if (s === "" || s === "-") return "0";
+  const neg = s.startsWith("-");
+  const digits = s.replace(/^-/, "").split(".")[0].replace(/[^\d]/g, "") || "0";
+  return (neg ? "-" : "") + digits;
+}
 function shuffle(arr){
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -876,16 +853,16 @@ function resultsColumn(body, opts={}){
    PAGE: Numbers
    ============================================================ */
 registerPage("numbers", "🔢", "Numbers", "Core Generators", (container) => {
-  pageHeader(container, "Numbers", "Generate random integers, floats, or dice rolls.");
+  pageHeader(container, "Numbers", "Generate random integers (up to a quintillion), floats, dice rolls, or shorthand suffixed numbers (K/M/B/T/Q).");
   const body = pageBody(container);
   const card = controlsCard(body);
 
-  const mode = makeSelect(["Integer","Float","Dice roll (NdM)"]);
+  const mode = makeSelect(["Integer","Float","Dice roll (NdM)","Suffixed (K/M/B/T/Q)"]);
   card.appendChild(fieldRow("Type", mode));
 
-  const minInput = makeNumber(-1e9, 1e9, 1, 1);
+  const minInput = makeNumber(-1e18, 1e18, 1, 1);
   card.appendChild(fieldRow("Min", minInput));
-  const maxInput = makeNumber(-1e9, 1e9, 100, 1);
+  const maxInput = makeNumber(-1e18, 1e18, 100, 1);
   card.appendChild(fieldRow("Max", maxInput));
   const decimals = makeNumber(0, 10, 2, 1);
   card.appendChild(fieldRow("Decimals", decimals));
@@ -893,6 +870,25 @@ registerPage("numbers", "🔢", "Numbers", "Core Generators", (container) => {
   card.appendChild(fieldRow("Dice count", diceN));
   const diceSides = makeNumber(2, 1000, 6, 1);
   card.appendChild(fieldRow("Dice sides", diceSides));
+
+  const suffixMin = makeNumber(0, 999999, 1.11, 0.01);
+  card.appendChild(fieldRow("Value min", suffixMin));
+  const suffixMax = makeNumber(0, 999999, 999.99, 0.01);
+  card.appendChild(fieldRow("Value max", suffixMax));
+  const suffixGroup = el("div", {class:"field-group"});
+  suffixGroup.appendChild(el("div", {class:"field-group-title"}, "Suffixes"));
+  const suffixRow = el("div", {class:"btn-row"});
+  const suffixChecks = {};
+  const SUFFIX_DEFS = [["K","10³"],["M","10⁶"],["B","10⁹"],["T","10¹²"],["Q","10¹⁵"]];
+  SUFFIX_DEFS.forEach(([key]) => {
+    const cf = checkField(key, true);
+    suffixChecks[key] = cf.input;
+    suffixRow.appendChild(cf.wrap);
+  });
+  suffixGroup.appendChild(suffixRow);
+  suffixGroup.appendChild(el("div", {class:"hint", style:"margin-top:6px;"}, SUFFIX_DEFS.map(([k,p]) => `${k}=${p}`).join("  ·  ")));
+  card.appendChild(suffixGroup);
+
   const count = makeNumber(1, 100000, 10, 1);
   card.appendChild(fieldRow("How many", count));
 
@@ -906,14 +902,19 @@ registerPage("numbers", "🔢", "Numbers", "Core Generators", (container) => {
     const m = mode.value;
     const isDice = m.startsWith("Dice");
     const isFloat = m === "Float";
-    [decimals].forEach(w => w.closest ? null : null);
-    decimals.disabled = !isFloat;
+    const isSuffix = m.startsWith("Suffixed");
+    const isInt = m === "Integer";
+    decimals.disabled = !(isFloat || isSuffix);
     diceN.disabled = !isDice; diceSides.disabled = !isDice;
-    minInput.disabled = isDice; maxInput.disabled = isDice;
-    uniqueF.input.disabled = isDice;
+    minInput.disabled = isDice || isSuffix; maxInput.disabled = isDice || isSuffix;
+    suffixMin.disabled = !isSuffix; suffixMax.disabled = !isSuffix;
+    Object.values(suffixChecks).forEach(c => c.disabled = !isSuffix);
+    suffixGroup.style.opacity = isSuffix ? 1 : .5;
+    uniqueF.input.disabled = !isInt;
+    sortF.input.disabled = isDice || isSuffix;
     minInput.step = isFloat ? "any" : "1";
     maxInput.step = isFloat ? "any" : "1";
-    if (!isFloat){ minInput.value = Math.round(+minInput.value || 0); maxInput.value = Math.round(+maxInput.value || 0); }
+    if (isInt){ minInput.value = toIntString(minInput.value); maxInput.value = toIntString(maxInput.value); }
   }
   [minInput, maxInput].forEach(inp => inp.addEventListener("input", () => {
     if (mode.value !== "Float") inp.value = inp.value.replace(/[^\d-]/g, "");
@@ -936,26 +937,62 @@ registerPage("numbers", "🔢", "Numbers", "Core Generators", (container) => {
       statsHint.textContent = `Rolling ${dice}d${sides} × ${n}`;
       results.setItems(items, "Numbers"); return;
     }
+    if (mode.value.startsWith("Suffixed")){
+      const selected = Object.entries(suffixChecks).filter(([,inp]) => inp.checked).map(([k]) => k);
+      if (!selected.length){ toast("Select at least one suffix (K/M/B/T/Q)."); return; }
+      let sMin = +suffixMin.value, sMax = +suffixMax.value;
+      if (sMin > sMax) [sMin,sMax] = [sMax,sMin];
+      const dec = +decimals.value;
+      const items = [];
+      for (let i=0;i<n;i++){
+        const v = secure
+          ? +(sMin + (crypto.getRandomValues(new Uint32Array(1))[0]/0xFFFFFFFF)*(sMax-sMin)).toFixed(dec)
+          : +(sMin + RNG.next()*(sMax-sMin)).toFixed(dec);
+        items.push(`${v}${rc(selected)}`);
+      }
+      statsHint.textContent = `Random ${sMin}–${sMax} × ${selected.join("/")}`;
+      results.setItems(items, "Numbers"); return;
+    }
+    if (mode.value === "Integer"){
+      let a = BigInt(toIntString(minInput.value)), b = BigInt(toIntString(maxInput.value));
+      if (a > b) [a,b] = [b,a];
+      const pickBig = (x,y) => secure ? riBig(x,y,true) : (RNG.seeded ? riBig(x,y,false) : riBig(x,y,true));
+      let values = [];
+      if (uniqueF.input.checked){
+        const spanBig = b - a + 1n;
+        const nBig = BigInt(n);
+        if (nBig > spanBig){ toast(`Can't pick ${n} unique ints from a range of ${spanBig}.`); return; }
+        if (spanBig <= 5000000n){
+          const span = Number(spanBig);
+          const pool = shuffle(Array.from({length:span}, (_,i) => a + BigInt(i)));
+          values = pool.slice(0, n);
+        } else {
+          const seen = new Set();
+          while (values.length < n){
+            const v = pickBig(a,b);
+            const key = v.toString();
+            if (!seen.has(key)){ seen.add(key); values.push(v); }
+          }
+        }
+      } else {
+        values = Array.from({length:n}, () => pickBig(a,b));
+      }
+      if (sortF.input.checked) values.sort((x,y) => x<y?-1:x>y?1:0);
+      if (values.length){
+        let min=values[0], max=values[0], sum=0n;
+        for (const v of values){ if (v<min) min=v; if (v>max) max=v; sum+=v; }
+        statsHint.textContent = `min ${min} · max ${max} · avg ${(Number(sum)/values.length).toFixed(3)} · sum ${sum}`;
+      }
+      results.setItems(values.map(String), "Numbers"); return;
+    }
+    // Float
     let a = +minInput.value, b = +maxInput.value;
     if (a > b) [a,b] = [b,a];
-    let values = [];
-    if (mode.value === "Integer"){
-      a = Math.round(a); b = Math.round(b);
-      if (uniqueF.input.checked){
-        const span = b - a + 1;
-        if (n > span){ toast(`Can't pick ${n} unique ints from a range of ${span}.`); return; }
-        const pool = shuffle(Array.from({length:span}, (_,i) => a+i));
-        values = pool.slice(0, n);
-      } else {
-        values = Array.from({length:n}, () => pick(a,b));
-      }
-    } else {
-      const dec = +decimals.value;
-      values = Array.from({length:n}, () => {
-        const v = secure ? (a + (crypto.getRandomValues(new Uint32Array(1))[0]/0xFFFFFFFF)*(b-a)) : (a + RNG.next()*(b-a));
-        return +v.toFixed(dec);
-      });
-    }
+    const dec = +decimals.value;
+    const values = Array.from({length:n}, () => {
+      const v = secure ? (a + (crypto.getRandomValues(new Uint32Array(1))[0]/0xFFFFFFFF)*(b-a)) : (a + RNG.next()*(b-a));
+      return +v.toFixed(dec);
+    });
     if (sortF.input.checked) values.sort((x,y)=>x-y);
     if (values.length){
       const sum = values.reduce((s,v)=>s+v,0);
@@ -1266,53 +1303,21 @@ registerPage("names", "👤", "Names & Identities", "Content", (container) => {
    PAGE: Dates & Times
    ============================================================ */
 registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
-  pageHeader(container, "Dates & Times", "Generate random dates, date+time combos, or just times of day.");
+  pageHeader(container, "Dates & Times", "Generate random dates or timestamps within a range.");
   const body = pageBody(container);
   const card = controlsCard(body);
-
-  const modeSel = makeSelect(["Date only","Date + Time","Time only"], 0);
-  card.appendChild(fieldRow("Mode", modeSel));
 
   const today = new Date();
   const twoYrsAgo = new Date(); twoYrsAgo.setFullYear(today.getFullYear()-2);
   const startInput = el("input", {type:"date", value: twoYrsAgo.toISOString().slice(0,10)});
-  const startRow = fieldRow("Start", startInput);
-  card.appendChild(startRow);
+  card.appendChild(fieldRow("Start", startInput));
   const endInput = el("input", {type:"date", value: today.toISOString().slice(0,10)});
-  const endRow = fieldRow("End", endInput);
-  card.appendChild(endRow);
-
-  const startTimeInput = el("input", {type:"time", value:"00:00", step:"1"});
-  const startTimeRow = fieldRow("Start time", startTimeInput);
-  card.appendChild(startTimeRow);
-  const endTimeInput = el("input", {type:"time", value:"23:59", step:"1"});
-  const endTimeRow = fieldRow("End time", endTimeInput);
-  card.appendChild(endTimeRow);
-
-  const dateFmtSel = makeSelect(["YYYY-MM-DD","MM/DD/YYYY","DD/MM/YYYY","Month D, YYYY","ISO 8601","Unix timestamp"]);
-  const dateFmtRow = fieldRow("Format", dateFmtSel);
-  card.appendChild(dateFmtRow);
-
-  const timeFmtSel = makeSelect(["HH:MM:SS (24h)","HH:MM (24h)","hh:mm:ss AM/PM (12h)","hh:mm AM/PM (12h)"]);
-  const timeFmtRow = fieldRow("Format", timeFmtSel);
-  card.appendChild(timeFmtRow);
-
+  card.appendChild(fieldRow("End", endInput));
+  const timeF = checkField("Include random time of day"); card.appendChild(timeF.wrap);
+  const fmtSel = makeSelect(["YYYY-MM-DD","MM/DD/YYYY","DD/MM/YYYY","Month D, YYYY","ISO 8601","Unix timestamp"]);
+  card.appendChild(fieldRow("Format", fmtSel));
   const count = makeNumber(1,10000,10,1); card.appendChild(fieldRow("How many", count));
   const sortF = checkField("Sort chronologically"); card.appendChild(sortF.wrap);
-
-  function syncMode(){
-    const mode = modeSel.value;
-    const isTimeOnly = mode === "Time only";
-    const isDateTime = mode === "Date + Time";
-    startRow.style.display = isTimeOnly ? "none" : "flex";
-    endRow.style.display = isTimeOnly ? "none" : "flex";
-    dateFmtRow.style.display = isTimeOnly ? "none" : "flex";
-    startTimeRow.style.display = isTimeOnly ? "flex" : "none";
-    endTimeRow.style.display = isTimeOnly ? "flex" : "none";
-    timeFmtRow.style.display = isTimeOnly ? "flex" : "none";
-  }
-  modeSel.addEventListener("change", syncMode);
-  syncMode();
 
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   function fmtDate(d, fmt, hasTime){
@@ -1327,39 +1332,13 @@ registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
     if (hasTime) s += ` ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     return s;
   }
-  function fmtTime(h, m, s, fmt){
-    const pad = n => String(n).padStart(2,"0");
-    if (fmt === "HH:MM:SS (24h)") return `${pad(h)}:${pad(m)}:${pad(s)}`;
-    if (fmt === "HH:MM (24h)") return `${pad(h)}:${pad(m)}`;
-    const ampm = h < 12 ? "AM" : "PM";
-    const h12 = ((h % 12) || 12);
-    if (fmt === "hh:mm:ss AM/PM (12h)") return `${pad(h12)}:${pad(m)}:${pad(s)} ${ampm}`;
-    return `${pad(h12)}:${pad(m)} ${ampm}`;
-  }
-  function parseTimeToSeconds(val){
-    const parts = (val || "00:00").split(":").map(Number);
-    return (parts[0]||0)*3600 + (parts[1]||0)*60 + (parts[2]||0);
-  }
 
   const results = resultsColumn(body, {filenameBase:"dates"});
   card.appendChild(primaryButton("Generate", () => {
-    const mode = modeSel.value;
-    const n = +count.value;
-
-    if (mode === "Time only"){
-      let s0 = parseTimeToSeconds(startTimeInput.value), s1 = parseTimeToSeconds(endTimeInput.value);
-      if (s0 > s1) [s0,s1] = [s1,s0];
-      let secs = Array.from({length:n}, () => ri(s0, s1));
-      if (sortF.input.checked) secs.sort((a,b)=>a-b);
-      const items = secs.map(sec => fmtTime(Math.floor(sec/3600), Math.floor((sec%3600)/60), sec%60, timeFmtSel.value));
-      results.setItems(items, "Dates & Times");
-      return;
-    }
-
     let d0 = new Date(startInput.value), d1 = new Date(endInput.value);
     if (d0 > d1) [d0,d1] = [d1,d0];
     const spanMs = d1.getTime() - d0.getTime();
-    const hasTime = mode === "Date + Time";
+    const n = +count.value, hasTime = timeF.input.checked;
     let dates = [];
     for (let i=0;i<n;i++){
       const offsetDays = ri(0, Math.round(spanMs/86400000));
@@ -1368,7 +1347,7 @@ registerPage("dates", "📅", "Dates & Times", "Content", (container) => {
       dates.push(d);
     }
     if (sortF.input.checked) dates.sort((a,b)=>a-b);
-    results.setItems(dates.map(d => fmtDate(d, dateFmtSel.value, hasTime)), "Dates & Times");
+    results.setItems(dates.map(d => fmtDate(d, fmtSel.value, hasTime)), "Dates & Times");
   }));
 });
 
@@ -1806,26 +1785,15 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   pageHeader(container, "Fake Profiles", "Toggle the fields you want, then generate synthetic mock profiles for demos, mockups, or video B-roll.");
   const body = pageBody(container);
   const card = controlsCard(body);
+  card.style.maxWidth = "380px";
 
   const localeSel = makeSelect(Object.entries(LOCALE_DATA).map(([code,d]) => [code, d.label]));
   card.appendChild(fieldRow("Locale", localeSel));
   const count = makeNumber(1,2000,10,1); card.appendChild(fieldRow("How many", count));
 
-  const genderSel = makeSelect(["Any (mixed)","Male only","Female only"]);
-  card.appendChild(fieldRow("Gender", genderSel));
-
-  const unitsSel = makeSelect(["Metric (cm / kg)","Imperial (ft-in / lbs)"]);
-  card.appendChild(fieldRow("Units", unitsSel));
-  card.appendChild(el("div", {class:"hint"}, "Only affects the “Height & Weight” field."));
-
   const minAge = makeNumber(0,120,18,1), maxAge = makeNumber(0,120,85,1);
-  minAge.style.flex = "1 1 0"; minAge.style.minWidth = "0";
-  maxAge.style.flex = "1 1 0"; maxAge.style.minWidth = "0";
   const ageRow = el("div", {class:"field-row"}, [
-    el("label", {}, "Age range"),
-    el("div", {style:"display:flex; align-items:center; gap:8px; flex:1; min-width:0;"}, [
-      minAge, el("span", {style:"flex:none; color:var(--text-dim); font-size:12.5px;"}, "to"), maxAge,
-    ]),
+    el("label", {}, "Age range"), minAge, el("span", {}, "to"), maxAge,
   ]);
   card.appendChild(ageRow);
   card.appendChild(el("div", {class:"hint"}, "Only affects the “Age / Date of Birth” field."));
@@ -1840,17 +1808,12 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   card.appendChild(selRow);
 
   const FIELD_DEFS = [
-    ["name","Full Name","Personal",true], ["gender","Gender","Personal",false], ["age_dob","Age / Date of Birth","Personal",true],
+    ["name","Full Name","Personal",true], ["age_dob","Age / Date of Birth","Personal",true],
     ["occupation","Occupation","Personal",true], ["employer","Employer / Company","Personal",false],
     ["ssn","SSN","Personal",false],
     ["email","Email","Contact",true], ["phone","Phone Number","Contact",true], ["address","Address","Contact",true],
     ["card","Credit / Debit Card","Financial (synthetic)",false], ["bank","Bank Account / IBAN","Financial (synthetic)",false],
-    ["credit_score","Credit Score","Financial (synthetic)",false], ["balance","Bank Balance","Financial (synthetic)",false],
-    ["income","Annual Income","Financial (synthetic)",false], ["net_worth","Net Worth","Financial (synthetic)",false],
-    ["account_type","Account Type","Financial (synthetic)",false],
-    ["member_since","Member Since","Account Activity",false], ["subscription","Subscription Plan","Account Activity",false],
-    ["account_status","Account Status","Account Activity",false], ["last_login","Last Login","Account Activity",false],
-    ["loyalty_points","Loyalty Points","Account Activity",false], ["transaction_count","Transactions (30 days)","Account Activity",false],
+    ["credit_score","Credit Score","Financial (synthetic)",false],
     ["username","Username","Online",false], ["password","Sample Password","Online",false],
     ["website","Website","Online",false], ["ip","IP Address","Online",false], ["user_agent","User Agent","Online",false],
     ["height_weight","Height & Weight","Other",false], ["blood_type","Blood Type","Other",false], ["vehicle","Vehicle","Other",false],
@@ -1877,28 +1840,17 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
   const head = el("div", {class:"results-head"}, [el("h3", {}, "Preview")]);
   const countLbl = el("span", {class:"stat"}, ""); head.appendChild(countLbl);
   head.appendChild(el("div", {class:"spacer"}));
-  const perFieldF = checkField("Per-field copy", true);
-  perFieldF.wrap.style.marginRight = "4px";
-  head.appendChild(perFieldF.wrap);
   const copyAllBtn = el("button", {class:"ghost"}, "Copy All");
   const fmtSel = makeSelect([["txt","TXT"],["csv","CSV"],["json","JSON"]]); fmtSel.style.width="auto";
   const exportBtn = el("button", {class:"ghost"}, "Export");
   const clearBtn = el("button", {class:"ghost"}, "Clear");
   head.append(copyAllBtn, fmtSel, exportBtn, clearBtn);
   right.appendChild(head);
-  const output = el("div", {class:"profiles-output"});
-  output.appendChild(el("div", {class:"empty", style:"padding:30px 10px; text-align:center; color:var(--text-dim);"}, "Nothing generated yet — set your options and click Generate Profiles."));
+  const output = el("div", {class:"output-box"}, "");
   right.appendChild(output);
   right.appendChild(el("div", {class:"hint"}, "⚠️ All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only."));
 
   let profiles = [];
-
-  function profileText(p, i){
-    const lines = [`── Profile #${i+1} ──`];
-    for (const [k,v] of Object.entries(p)) lines.push(`${k}: ${v}`);
-    return lines.join("\n");
-  }
-  function allText(){ return profiles.map(profileText).join("\n\n"); }
 
   function synthIban(){ return rc(["GB","DE","FR","NL"]) + ri(10,99) + Array.from({length:4},()=>rc([..."ABCDEFGHJKLMNPQRSTUVWXYZ"])).join("") + String(ri(10000000,99999999)) + String(ri(1000,9999)); }
   function synthSwift(){ return Array.from({length:4},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])).join("") + rc(["GB","US","DE","FR","JP"]) + Array.from({length:2},()=>rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"])).join(""); }
@@ -1910,20 +1862,10 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36",
   ];
 
-  function companyName(loc){
-    const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
-    const pattern = ri(0,2);
-    if (pattern === 0) return `${rc(loc.last)} ${rc(COMPANY_SUFFIXES)}`;
-    if (pattern === 1) return `${cap(rc(WORD_BANK))} ${rc(COMPANY_SUFFIXES)}`;
-    return `${rc(loc.last)} & ${cap(rc(WORD_BANK))}`;
-  }
-
-  function buildProfile(loc, selected, ageMin, ageMax, gender, units){
+  function buildProfile(loc, selected, ageMin, ageMax){
     const p = {};
-    const first = gender === "male" ? rc(loc.firstMale) : rc(loc.firstFemale);
-    const last = rc(loc.last);
+    const first = rc(loc.first), last = rc(loc.last);
     if (selected.has("name")) p["Name"] = `${first} ${last}`;
-    if (selected.has("gender")) p["Gender"] = gender === "male" ? "Male" : "Female";
     if (selected.has("age_dob")){
       const age = ri(ageMin, ageMax);
       const now = new Date();
@@ -1932,7 +1874,7 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
       p["Age"] = String(age);
     }
     if (selected.has("occupation")) p["Occupation"] = rc(JOBS);
-    if (selected.has("employer")) p["Employer"] = companyName(loc);
+    if (selected.has("employer")) p["Employer"] = `${rc(loc.last)}, ${rc(loc.last)} and ${rc(loc.last)}`;
     if (selected.has("ssn")) p["SSN (synthetic)"] = loc.ssnFmt();
     if (selected.has("email")) p["Email"] = `${first.toLowerCase()}.${last.toLowerCase()}${ri(0,998)}@${rc(DOMAINS)}`;
     if (selected.has("phone")) p["Phone"] = loc.phone();
@@ -1955,76 +1897,26 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
       p["Bank (synthetic)"] = `Acct ${acct} • Routing ${routing} • IBAN ${synthIban()} • SWIFT ${synthSwift()}`;
     }
     if (selected.has("credit_score")) p["Credit Score (synthetic)"] = String(ri(300,850));
-    if (selected.has("balance")) p["Bank Balance"] = formatMoney(rf(12.50, 85000, 2), loc.currency);
-    if (selected.has("income")) p["Annual Income"] = formatMoney(rf(20000, 250000, 2), loc.currency);
-    if (selected.has("net_worth")) p["Net Worth"] = formatMoney(rf(-50000, 750000, 2), loc.currency);
-    if (selected.has("account_type")) p["Account Type"] = rc(["Checking","Savings","Checking & Savings"]);
-    if (selected.has("member_since")){
-      const daysAgo = ri(30, 8*365);
-      const d = new Date(Date.now() - daysAgo*86400000);
-      p["Member Since"] = d.toISOString().slice(0,10);
-    }
-    if (selected.has("subscription")) p["Subscription Plan"] = rc(["Free","Basic","Pro","Enterprise"]);
-    if (selected.has("account_status")) p["Account Status"] = rc(["Active","Active","Active","Inactive","Suspended","Pending Verification"]);
-    if (selected.has("last_login")){
-      const minsAgo = ri(2, 30*24*60);
-      const d = new Date(Date.now() - minsAgo*60000);
-      p["Last Login"] = d.toISOString().slice(0,16).replace("T"," ");
-    }
-    if (selected.has("loyalty_points")) p["Loyalty Points"] = ri(0,50000).toLocaleString();
-    if (selected.has("transaction_count")) p["Transactions (30 days)"] = String(ri(0,120));
     if (selected.has("username")) p["Username"] = `${first.toLowerCase()}${last.toLowerCase()}${ri(0,98)}`;
     if (selected.has("password")) p["Sample Password"] = Array.from({length:14}, () => rc([..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"])).join("");
     if (selected.has("website")) p["Website"] = `http://www.${last.toLowerCase()}${rc(WORD_BANK)}.${rc(TLDS)}/`;
     if (selected.has("ip")) p["IP Address"] = Array.from({length:4}, () => ri(1,254)).join(".");
     if (selected.has("user_agent")) p["User Agent"] = rc(UAS);
-    if (selected.has("height_weight")){
-      if (units.startsWith("Imperial")){
-        const totalIn = ri(59,79);
-        const ft = Math.floor(totalIn/12), inch = totalIn%12;
-        const lbs = ri(100,240);
-        p["Height / Weight"] = `${ft}'${inch}" / ${lbs} lbs`;
-      } else {
-        p["Height / Weight"] = `${ri(150,200)} cm / ${ri(45,110)} kg`;
-      }
-    }
+    if (selected.has("height_weight")) p["Height / Weight"] = `${ri(150,200)} cm / ${ri(45,110)} kg`;
     if (selected.has("blood_type")) p["Blood Type"] = rc(["A+","A-","B+","B-","AB+","AB-","O+","O-"]);
     if (selected.has("vehicle")) p["Vehicle"] = `${rc(VEHICLE_MAKES)} • Plate ${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}${rc([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"])}-${ri(1000,9999)}`;
     return p;
   }
 
   function render(){
-    output.innerHTML = "";
-    if (!profiles.length){
-      output.appendChild(el("div", {class:"empty", style:"padding:30px 10px; text-align:center; color:var(--text-dim);"}, "Nothing generated yet — set your options and click Generate Profiles."));
-      countLbl.textContent = "";
-      return;
-    }
-    const perField = perFieldF.input.checked;
-    profiles.forEach((p, i) => {
-      const copyBtn = el("button", {class:"profile-copy-btn"}, "Copy profile");
-      copyBtn.addEventListener("click", () => copyText(profileText(p, i)));
-      const cardHead = el("div", {class:"profile-card-head"}, [el("span", {}, `Profile #${i+1}`), copyBtn]);
-      const card = el("div", {class:"profile-card"}, [cardHead]);
-      for (const [k,v] of Object.entries(p)){
-        const valSpan = el("span", {class:"f-val"}, String(v));
-        const line = el("div", {class:"profile-field" + (perField ? " clickable" : "")}, [
-          el("span", {class:"f-key"}, `${k}:`), valSpan,
-        ]);
-        if (perField){
-          line.addEventListener("click", () => {
-            copyText(String(v));
-            line.classList.add("flash");
-            setTimeout(() => line.classList.remove("flash"), 700);
-          });
-        }
-        card.appendChild(line);
-      }
-      output.appendChild(card);
+    const blocks = profiles.map((p,i) => {
+      const lines = [`── Profile #${i+1} ──`];
+      for (const [k,v] of Object.entries(p)) lines.push(`${k}: ${v}`);
+      return lines.join("\n");
     });
-    countLbl.textContent = `${profiles.length} profile${profiles.length===1?"":"s"}`;
+    output.textContent = blocks.join("\n\n");
+    countLbl.textContent = profiles.length ? `${profiles.length} profile${profiles.length===1?"":"s"}` : "";
   }
-  perFieldF.input.addEventListener("change", render);
 
   card.appendChild(primaryButton("Generate Profiles", () => {
     const selected = new Set(Object.entries(checks).filter(([,c]) => c.checked).map(([k]) => k));
@@ -2032,26 +1924,21 @@ registerPage("profiles", "💳", "Fake Profiles", "Advanced", (container) => {
     let ageMin = +minAge.value, ageMax = +maxAge.value;
     if (ageMin > ageMax) [ageMin, ageMax] = [ageMax, ageMin];
     const loc = LOCALE_DATA[localeSel.value];
-    const units = unitsSel.value;
-    const genderMode = genderSel.value;
     RNG.seed(seedInput.value.trim());
     const n = +count.value;
-    profiles = Array.from({length:n}, () => {
-      const gender = genderMode === "Male only" ? "male" : genderMode === "Female only" ? "female" : rc(["male","female"]);
-      return buildProfile(loc, selected, ageMin, ageMax, gender, units);
-    });
+    profiles = Array.from({length:n}, () => buildProfile(loc, selected, ageMin, ageMax));
     RNG.seed(""); // don't let the seed leak into other pages
     render();
     logHistory("Fake Profiles", profiles.map((p,i) => p["Name"] || `Profile ${i+1}`));
   }));
 
-  copyAllBtn.addEventListener("click", () => copyText(allText()));
+  copyAllBtn.addEventListener("click", () => copyText(output.textContent));
   clearBtn.addEventListener("click", () => { profiles = []; render(); });
   exportBtn.addEventListener("click", () => {
     if (!profiles.length){ toast("Generate some profiles first."); return; }
     const fmt = fmtSel.value;
     const disclaimer = "All data is synthetically generated and not linked to any real person, account, or number. For mockups, demos, and testing only.";
-    if (fmt === "txt") downloadBlob("fake_profiles.txt", `# ${disclaimer}\n\n` + allText(), "text/plain");
+    if (fmt === "txt") downloadBlob("fake_profiles.txt", `# ${disclaimer}\n\n` + output.textContent, "text/plain");
     else if (fmt === "json") downloadBlob("fake_profiles.json", JSON.stringify({disclaimer, profiles}, null, 2), "application/json");
     else {
       const fieldnames = []; profiles.forEach(p => Object.keys(p).forEach(k => { if (!fieldnames.includes(k)) fieldnames.push(k); }));
@@ -2217,7 +2104,6 @@ function initApp(){
   renderHistory();
   applyTheme();
   selectPage(NAV[0].key);
-  document.getElementById("versionBadge").textContent = "v" + APP_VERSION;
 
   document.getElementById("themeToggle").addEventListener("click", () => { isDark = !isDark; applyTheme(); });
 
@@ -2249,7 +2135,7 @@ function initApp(){
   document.getElementById("aboutBtn").addEventListener("click", () => {
     const overlay = el("div", {id:"about-overlay", style:"position:fixed; inset:0; background:rgba(5,6,10,.55); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:700;"});
     const box = el("div", {class:"card", style:"max-width:440px; padding:24px; margin:16px;"}, [
-      el("h2", {style:"font-family:var(--font-display); margin:0 0 10px;"}, `Random Studio  ·  v${APP_VERSION}`),
+      el("h2", {style:"font-family:var(--font-display); margin:0 0 10px;"}, "Random Studio"),
       el("div", {class:"hint", style:"line-height:1.7; font-size:12.5px;"},
         "A fast, modern, all-in-one random data & developer QoL toolkit — built to run entirely in your browser, no server, no accounts, no data leaving your device.\n\n" +
         "Numbers · Strings · Passwords · UUIDs · Colors · Names · Dates · Lorem Ipsum · List Tools · Network · Words · Dev Tools · Bulk Renamer · Fake Profiles · Text Scrambler · Progression Scaler"),
